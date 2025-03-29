@@ -160,16 +160,16 @@ font-weight: bold;</string>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox">
+           <widget class="QComboBox" name="modesCombobox">
             <property name="minimumSize">
              <size>
-              <width>400</width>
+              <width>380</width>
               <height>0</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>400</width>
+              <width>390</width>
               <height>16777215</height>
              </size>
             </property>
