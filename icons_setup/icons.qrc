@@ -1,0 +1,16 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource>
+    <file>..\icons_setup\icons\logo.png</file>
+    <file>..\icons_setup\icons\browse.png</file>
+    <file>..\icons_setup\icons\show.png</file>
+    <file>..\icons_setup\icons\hide.png</file>
+    <file>..\icons_setup\icons\reset.png</file>
+    <file>..\icons_setup\icons\grey.png</file>
+    <file>..\icons_setup\icons\hybrid.png</file>
+    <file>..\icons_setup\icons\normalize.png</file>
+    <file>..\icons_setup\icons\circle.png</file>
+    <file>..\icons_setup\icons\square.png</file>
+
+  </qresource>
+</RCC>
