@@ -1,39 +1,26 @@
 import numpy as np
 import cv2
+from PyQt5.QtWidgets import QApplication, QFileDialog
+import sys
+import image
 
 class SIFT:
     def __init__(self, sigma=1.6, s=3, num_octaves=4):
-        """
-        Initialize SIFT parameters.
-        
-        Parameters:
-        - sigma (float): Base sigma for Gaussian blur (default: 1.6)
-        - s (int): Number of intervals per octave (default: 3)
-        - num_octaves (int): Number of octaves (default: 4)
-        """
         self.sigma = sigma
         self.s = s
-        self.k = 2 ** (1.0 / s)  # Scale factor between levels
-        self.num_levels = s + 3   # Number of blur levels per octave (s + 3 for DoG)
+        self.k = 2 ** (1.0 / s)
+        self.num_levels = s + 3
         self.num_octaves = num_octaves
-        self.scale_space = None   # To store the Gaussian scale space
+        self.scale_space = None
 
     def build_scale_space(self, image):
-        """
-        Construct the Gaussian scale space for the input image using cv2.GaussianBlur.
-        
-        Parameters:
-        - image (ndarray): Grayscale input image as a 2D NumPy array
-        """
         image = image.astype(np.float32)
         self.scale_space = []
-
         for o in range(self.num_octaves):
             if o == 0:
                 base_image = image
             else:
                 base_image = self.scale_space[o-1][self.s][::2, ::2]
-
             octave = []
             for m in range(self.num_levels):
                 sigma_m = self.sigma * (self.k ** m)
@@ -45,15 +32,8 @@ class SIFT:
             self.scale_space.append(octave)
 
     def detect_extrema(self):
-        """
-        Detect scale space extrema in the Difference of Gaussians (DoG).
-        
-        Returns:
-        - extrema (list): List of tuples (octave, level, x, y) representing extrema locations
-        """
         if self.scale_space is None:
             raise ValueError("Scale space has not been constructed. Call build_scale_space first.")
-
         DoG = []
         for o in range(self.num_octaves):
             octave_DoG = []
@@ -69,7 +49,6 @@ class SIFT:
                 dog_curr = DoG[o][m]
                 dog_next = DoG[o][m + 1]
                 height, width = dog_curr.shape
-
                 for y in range(1, height - 1):
                     for x in range(1, width - 1):
                         val = dog_curr[y, x]
@@ -86,23 +65,11 @@ class SIFT:
                         ]
                         if val > max(neighbors) or val < min(neighbors):
                             extrema.append((o, m, x, y))
-
         return extrema
 
     def localize_keypoints(self, extrema, contrast_threshold=0.03, edge_threshold=10):
-        """
-        Refine extrema into keypoints with sub-pixel accuracy and filter out unstable ones.
-        
-        Parameters:
-        - extrema (list): List of (octave, level, x, y) from detect_extrema
-        - contrast_threshold (float): Minimum DoG magnitude (default: 0.03)
-        - edge_threshold (float): Maximum curvature ratio for edge rejection (default: 10)
-        
-        Returns:
-        - keypoints (list): List of (x, y, sigma) in original image coordinates
-        """
         keypoints = []
-        DoG_pyramid = []  # Precompute DoG for all octaves
+        DoG_pyramid = []
         for o in range(self.num_octaves):
             octave_DoG = []
             for m in range(self.num_levels - 1):
@@ -111,23 +78,17 @@ class SIFT:
             DoG_pyramid.append(octave_DoG)
 
         for (o, m, x, y) in extrema:
-            # Get 3x3x3 DoG neighborhood
             dog_prev = DoG_pyramid[o][m - 1]
             dog_curr = DoG_pyramid[o][m]
             dog_next = DoG_pyramid[o][m + 1]
-
-            # Check bounds (skip if too close to edge)
             if x < 1 or y < 1 or x >= dog_curr.shape[1] - 1 or y >= dog_curr.shape[0] - 1:
                 continue
 
-            # Sub-pixel refinement
-            # First derivatives
             Dx = (dog_curr[y, x+1] - dog_curr[y, x-1]) / 2.0
             Dy = (dog_curr[y+1, x] - dog_curr[y-1, x]) / 2.0
             Ds = (dog_next[y, x] - dog_prev[y, x]) / 2.0
             gradient = np.array([Dx, Dy, Ds])
 
-            # Second derivatives
             Dxx = dog_curr[y, x+1] - 2 * dog_curr[y, x] + dog_curr[y, x-1]
             Dyy = dog_curr[y+1, x] - 2 * dog_curr[y, x] + dog_curr[y-1, x]
             Dss = dog_next[y, x] - 2 * dog_curr[y, x] + dog_prev[y, x]
@@ -140,52 +101,183 @@ class SIFT:
                 [Dxs, Dys, Dss]
             ])
 
-            # Solve for offset: x̂ = -H⁻¹ * ∇D
             try:
                 offset = -np.linalg.inv(hessian).dot(gradient)
             except np.linalg.LinAlgError:
-                continue  # Skip if Hessian is singular
+                continue
 
-            # Check if offset is too large (unstable)
             if np.any(np.abs(offset) > 0.5):
-                continue  # Could iterate here, but we'll skip for simplicity
+                continue
 
-            # Refined position
             x_refined = x + offset[0]
             y_refined = y + offset[1]
             m_refined = m + offset[2]
 
-            # Compute refined DoG value for contrast check
             D_refined = dog_curr[y, x] + 0.5 * gradient.dot(offset)
             if abs(D_refined) < contrast_threshold:
-                continue  # Low contrast, discard
+                continue
 
-            # Edge response elimination (2D Hessian at current level)
-            H_2d = np.array([
-                [Dxx, Dxy],
-                [Dxy, Dyy]
-            ])
+            H_2d = np.array([[Dxx, Dxy], [Dxy, Dyy]])
             trace = Dxx + Dyy
             det = Dxx * Dyy - Dxy ** 2
             if det <= 0 or trace ** 2 / det >= (edge_threshold + 1) ** 2 / edge_threshold:
-                continue  # Edge-like, discard
+                continue
 
-            # Convert to original image coordinates and sigma
             scale_factor = 2 ** o
             x_final = x_refined * scale_factor
             y_final = y_refined * scale_factor
             sigma_final = self.sigma * (self.k ** m_refined) * scale_factor
 
-            keypoints.append((x_final, y_final, sigma_final))
-
+            kp = cv2.KeyPoint(x_final, y_final, sigma_final * 2)
+            keypoints.append(kp)
         return keypoints
 
-# Example usage:
+    def assign_orientations(self, keypoints, image):
+        oriented_keypoints = []
+        for kp in keypoints:
+            x, y = int(kp.pt[0]), int(kp.pt[1])
+            sigma = kp.size / 2
+            radius = int(np.ceil(1.5 * sigma))
+            if (x - radius < 0 or x + radius >= image.shape[1] or 
+                y - radius < 0 or y + radius >= image.shape[0]):
+                continue
+
+            patch = image[y-radius:y+radius+1, x-radius:x+radius+1]
+            dx = cv2.Sobel(patch, cv2.CV_32F, 1, 0, ksize=3)
+            dy = cv2.Sobel(patch, cv2.CV_32F, 0, 1, ksize=3)
+            magnitude = np.sqrt(dx**2 + dy**2)
+            direction = np.arctan2(dy, dx) * 180 / np.pi
+            direction = (direction + 360) % 360
+
+            y_coords, x_coords = np.indices(patch.shape)
+            center = radius
+            gaussian = np.exp(-((x_coords - center)**2 + (y_coords - center)**2) / (2 * sigma**2))
+            weights = magnitude * gaussian
+
+            hist = np.zeros(36)
+            for i in range(patch.shape[0]):
+                for j in range(patch.shape[1]):
+                    bin_idx = int(direction[i, j] // 10)
+                    hist[bin_idx] += weights[i, j]
+
+            hist_smoothed = np.convolve(hist, [1, 1, 1], mode='same') / 3
+            max_idx = np.argmax(hist_smoothed)
+            if hist_smoothed[max_idx] == 0:
+                continue
+            
+            angle = float((max_idx * 10 + 5) % 360)
+            new_kp = cv2.KeyPoint(float(x), float(y), kp.size, angle)
+            oriented_keypoints.append(new_kp)
+        return oriented_keypoints
+
+    def compute_descriptors(self, keypoints, image):
+        filtered_keypoints = []
+        descriptors = []
+        
+        for kp in keypoints:
+            x, y = int(kp.pt[0]), int(kp.pt[1])
+            sigma = kp.size / 2
+            orientation = kp.angle
+            radius = int(np.ceil(3 * sigma))
+            if (x - radius < 0 or x + radius >= image.shape[1] or 
+                y - radius < 0 or y + radius >= image.shape[0]):
+                continue
+
+            patch = image[y-radius:y+radius+1, x-radius:x+radius+1]
+            dx = cv2.Sobel(patch, cv2.CV_32F, 1, 0, ksize=3)
+            dy = cv2.Sobel(patch, cv2.CV_32F, 0, 1, ksize=3)
+            magnitude = np.sqrt(dx**2 + dy**2)
+            direction = np.arctan2(dy, dx) * 180 / np.pi
+            direction = (direction + 360) % 360
+
+            y_coords, x_coords = np.indices(patch.shape)
+            center = radius
+            gaussian = np.exp(-((x_coords - center)**2 + (y_coords - center)**2) / (2 * (1.5 * sigma)**2))
+            weights = magnitude * gaussian
+
+            direction = (direction - orientation + 360) % 360
+            patch_size = patch.shape[0]
+            subregion_size = patch_size // 4
+            descriptor = []
+
+            for i in range(4):
+                for j in range(4):
+                    y_start = i * subregion_size
+                    y_end = (i + 1) * subregion_size
+                    x_start = j * subregion_size
+                    x_end = (j + 1) * subregion_size
+                    sub_weights = weights[y_start:y_end, x_start:x_end]
+                    sub_directions = direction[y_start:y_end, x_start:x_end]
+                    hist = np.zeros(8)
+                    for sy in range(sub_weights.shape[0]):
+                        for sx in range(sub_weights.shape[1]):
+                            bin_idx = int(sub_directions[sy, sx] // 45)
+                            hist[bin_idx] += sub_weights[sy, sx]
+                    descriptor.extend(hist)
+
+            descriptor = np.array(descriptor)
+            norm = np.linalg.norm(descriptor)
+            if norm > 0:
+                descriptor = descriptor / norm
+                descriptor = np.clip(descriptor, 0, 0.2)
+                norm = np.linalg.norm(descriptor)
+                if norm > 0:
+                    descriptor = descriptor / norm
+                    filtered_keypoints.append(kp)
+                    descriptors.append(descriptor)
+
+        return filtered_keypoints, np.array(descriptors)
+
+def select_image():
+    app = QApplication(sys.argv)
+    options = QFileDialog.Options()
+    file_path, _ = QFileDialog.getOpenFileName(
+        None, 
+        "Select Image", 
+        "", 
+        "Image Files (*.jpg *.jpeg *.png *.bmp *.gif)", 
+        options=options
+    )
+    if file_path:
+        img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            print(f"Failed to load image: {file_path}")
+            return None
+        return img
+    return None
+
 if __name__ == "__main__":
-    # Create a dummy 64x64 grayscale image
-    image = np.random.rand(64, 64) * 255
+    image = select_image()
+    if image is None:
+        print("No image selected or failed to load.")
+        sys.exit(1)
+
     sift = SIFT(sigma=1.6, s=3, num_octaves=4)
     sift.build_scale_space(image)
     extrema = sift.detect_extrema()
     keypoints = sift.localize_keypoints(extrema)
-    print(f"Found {len(keypoints)} keypoints: {keypoints[:5]}")  # Print first 5
+    oriented_keypoints = sift.assign_orientations(keypoints, image)
+    final_keypoints, descriptors = sift.compute_descriptors(oriented_keypoints, image)
+
+    print(f"Found {len(keypoints)} initial keypoints")
+    print(f"After orientation assignment: {len(oriented_keypoints)} keypoints")
+    print(f"After descriptor computation: {len(final_keypoints)} keypoints with {descriptors.shape} descriptors")
+    
+    # Optional: Print sample descriptors
+    # print("\nSample Descriptors (first 3 keypoints):")
+    # for i in range(min(3, len(final_keypoints))):
+    #     print(f"Keypoint {i+1} at ({final_keypoints[i].pt[0]:.1f}, {final_keypoints[i].pt[1]:.1f}):")
+    #     print(descriptors[i][:32], "... (first 32 of 128 values)")
+
+    image_color = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+    image_with_keypoints = cv2.drawKeypoints(
+        image_color,
+        final_keypoints,
+        None,
+        flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS,
+        color=(0, 255, 0)
+    )
+
+    cv2.imshow("SIFT Keypoints with Descriptors", image_with_keypoints)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
