@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from PyQt5.QtWidgets import QApplication, QFileDialog
 import sys
-import image
+from classes import image
 
 class SIFT:
     def __init__(self, sigma=1.6, s=3, num_octaves=4):
