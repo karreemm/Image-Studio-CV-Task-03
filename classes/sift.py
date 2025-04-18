@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 from PyQt5.QtWidgets import QApplication, QFileDialog
 import sys
-from classes import image
 
 class SIFT:
     def __init__(self, sigma=1.6, s=3, num_octaves=4):
@@ -347,6 +346,75 @@ class SIFT:
         matches = sorted(matches, key=lambda x: x.distance)
         return matches
 
+
+    def match_featues_with_ssd(self, descriptors1, descriptors2, threshold = 0.8):
+        """
+        Match SIFT descriptors between two images using SSD, minimizing distance.
+        Args:
+            descriptors1: SIFT descriptors of first image (n1 x 128).
+            descriptors2: SIFT descriptors of second image (n2 x 128).
+        Returns:
+            matches: List of cv2.DMatch objects representing best matches.
+        """
+        matches = []
+        
+        for i in range(len(descriptors1)):
+            best_distance = float('inf')
+            best_idx = -1
+            
+            for j in range(len(descriptors2)):
+                distance = np.sum((descriptors1[i] - descriptors2[j]) ** 2)
+                
+                if distance < best_distance:
+                    best_distance = distance
+                    best_idx = j
+            
+            if best_distance <= 1- threshold:
+                # Store match
+                match = cv2.DMatch()
+                match.queryIdx = i
+                match.trainIdx = best_idx
+                match.distance = best_distance
+                matches.append(match)
+        
+        # Sort matches by distance (ascending)
+        matches = sorted(matches, key=lambda x: x.distance)
+        print (f"matches found: {matches}")
+        return matches
+    
+    
+    # def match_and_visualize(self, image1, image2, keypoints1, descriptors1, keypoints2, descriptors2, sift):
+    #     """
+    #     Match features between two images and visualize the results.
+    #     Args:
+    #         image1: First grayscale image (numpy array).
+    #         image2: Second grayscale image (numpy array).
+    #         keypoints1: List of cv2.KeyPoint objects for first image.
+    #         descriptors1: SIFT descriptors for first image (n1 x 128).
+    #         keypoints2: List of cv2.KeyPoint objects for second image.
+    #         descriptors2: SIFT descriptors for second image (n2 x 128).
+    #         sift: SIFT object with match_features method.
+    #     Returns:
+    #         matched_image: Image with drawn matches (BGR).
+    #     """
+    #     # Find matches using NCC
+    #     # matches = sift.match_features(descriptors1, descriptors2, threshold=0.8)
+    #     matches = sift.match_featues_with_ssd(descriptors1, descriptors2)
+    #     # Convert grayscale images to BGR for color visualization
+    #     img1_color = cv2.cvtColor(image1, cv2.COLOR_GRAY2BGR)
+    #     img2_color = cv2.cvtColor(image2, cv2.COLOR_GRAY2BGR)
+        
+    #     # Draw top N matches (e.g., top 50 or all if fewer)
+    #     matched_image = cv2.drawMatches(
+    #         img1_color, keypoints1, img2_color, keypoints2, matches[:min(50, len(matches))],
+    #         None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
+    #         matchColor=(0, 255, 0),  # Green lines for matches
+    #         singlePointColor=(0, 0, 255)  # Red for unmatched keypoints
+    #     )
+        
+    #     print(f"Number of matches found: {len(matches)}")
+    #     return matched_image
+
     def match_and_visualize(self, image1, image2, keypoints1, descriptors1, keypoints2, descriptors2, sift):
         """
         Match features between two images and visualize the results.
@@ -361,21 +429,39 @@ class SIFT:
         Returns:
             matched_image: Image with drawn matches (BGR).
         """
-        # Find matches using NCC
-        matches = sift.match_features(descriptors1, descriptors2, threshold=0.8)
-        
+        # Find matches using SSD
+        matches = sift.match_featues_with_ssd(descriptors1, descriptors2)
+
         # Convert grayscale images to BGR for color visualization
         img1_color = cv2.cvtColor(image1, cv2.COLOR_GRAY2BGR)
         img2_color = cv2.cvtColor(image2, cv2.COLOR_GRAY2BGR)
-        
-        # Draw top N matches (e.g., top 50 or all if fewer)
-        matched_image = cv2.drawMatches(
-            img1_color, keypoints1, img2_color, keypoints2, matches[:min(50, len(matches))],
-            None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
-            matchColor=(0, 255, 0),  # Green lines for matches
-            singlePointColor=(0, 0, 255)  # Red for unmatched keypoints
-        )
-        
+
+        # Create a canvas to combine both images side by side
+        height1, width1 = img1_color.shape[:2]
+        height2, width2 = img2_color.shape[:2]
+        combined_height = max(height1, height2)
+        combined_width = width1 + width2
+        matched_image = np.zeros((combined_height, combined_width, 3), dtype=np.uint8)
+        matched_image[:height1, :width1] = img1_color
+        matched_image[:height2, width1:] = img2_color
+
+        # Draw each match with a unique color
+        for match in matches[:min(50, len(matches))]:  # Limit to top 50 matches
+            # Generate a random color
+            color = tuple(np.random.randint(0, 256, 3).tolist())
+
+            # Get the keypoints for the match
+            pt1 = tuple(map(int, keypoints1[match.queryIdx].pt))
+            pt2 = tuple(map(int, keypoints2[match.trainIdx].pt))
+            pt2 = (pt2[0] + width1, pt2[1])  # Adjust pt2's x-coordinate for the combined image
+
+            # Draw a line between the matched points
+            cv2.line(matched_image, pt1, pt2, color, 2)
+
+            # Draw circles at the keypoints
+            cv2.circle(matched_image, pt1, 5, color, -1)
+            cv2.circle(matched_image, pt2, 5, color, -1)
+
         print(f"Number of matches found: {len(matches)}")
         return matched_image
 
