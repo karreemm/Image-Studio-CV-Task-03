@@ -102,6 +102,17 @@ class MainWindow(QMainWindow):
         self.matchingBrowseImage2 = self.findChild(QPushButton , "matchingBrowseImage2")
         self.matchingBrowseImage2.clicked.connect(self.controller.browse_matching_image2)
 
+        # Initialize Matching Parameters
+        self.thresholdInputMatching = self.findChild(QLineEdit , "thresholdInputMatching")
+        self.thresholdInputMatching.setText("0.8")
+        self.matching_threshold = float(self.thresholdInputMatching.text())
+        self.thresholdInputMatching.textChanged.connect(self.update_matching_parameters)
+
+        self.numOfMatchesInputMatching = self.findChild(QLineEdit , "numOfMatchesInputMatching")
+        self.numOfMatchesInputMatching.setText("150")
+        self.numOfMatches = int(self.numOfMatchesInputMatching.text())
+        self.numOfMatchesInputMatching.textChanged.connect(self.update_matching_parameters)
+
         # Initialize Apply SSD Matching Button
         self.ssdApply = self.findChild(QPushButton , "ssdApply")
         self.ssdApply.clicked.connect(self.apply_ssd_matching)
@@ -157,10 +168,18 @@ class MainWindow(QMainWindow):
         self.sigmaSift = float(self.sigmaInputSift.text())
 
     def apply_ssd_matching(self):
-        self.controller.match_images(method='ssd')
+        self.controller.match_images(method='ssd', threshold=self.matching_threshold, num_matches=self.numOfMatches)
 
     def apply_ncc_matching(self):
         self.controller.match_images(method='ncc')
+
+    def update_matching_parameters(self):
+        if self.numOfMatchesInputMatching.text() == "" or self.numOfMatchesInputMatching.text().isalpha():
+            self.numOfMatchesInputMatching.setText("150")
+        if self.thresholdInputMatching.text() == "" or self.thresholdInputMatching.text().isalpha():
+            self.thresholdInputMatching.setText("0.8")
+        self.numOfMatches = int(self.numOfMatchesInputMatching.text())
+        self.matching_threshold = float(self.thresholdInputMatching.text())
 
         
 if __name__ == '__main__':

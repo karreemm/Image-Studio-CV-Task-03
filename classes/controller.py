@@ -79,7 +79,7 @@ class Controller():
         qpixmap__ = self.numpy_to_qpixmap(result_image)
         self.labels[3].setPixmap(qpixmap__)
     
-    def match_images(self, method="ssd"):
+    def match_images(self, method="ssd", threshold=0.8, num_matches=150):
         self.sift1.build_scale_space(self.input_image_matching_1.input_image)
         extrema1 = self.sift1.detect_extrema()
         keypoints1 = self.sift1.localize_keypoints(extrema1)
@@ -92,7 +92,7 @@ class Controller():
         oriented_keypoints2 = self.sift2.assign_orientations(keypoints2, self.input_image_matching_2.input_image)
         final_keypoints2, descriptors2 = self.sift2.compute_descriptors(oriented_keypoints2, self.input_image_matching_2.input_image)
 
-        matched_image = self.sift1.match_and_visualize(self.input_image_matching_1.input_image, self.input_image_matching_2.input_image, final_keypoints1, descriptors1, final_keypoints2, descriptors2, method)
+        matched_image = self.sift1.match_and_visualize(self.input_image_matching_1.input_image, self.input_image_matching_2.input_image, final_keypoints1, descriptors1, final_keypoints2, descriptors2, method, threshold, num_matches)
         qpixmap_ = self.numpy_to_qpixmap(matched_image)
         self.labels[6].setPixmap(qpixmap_)
         

@@ -982,6 +982,12 @@ padding: 5px;</string>
                 <height>500</height>
                </size>
               </property>
+              <property name="styleSheet">
+               <string notr="true">QFrame{
+border-radius: 10px;
+border: 2px solid white; 
+}</string>
+              </property>
               <property name="frameShape">
                <enum>QFrame::StyledPanel</enum>
               </property>
@@ -989,6 +995,117 @@ padding: 5px;</string>
                <enum>QFrame::Raised</enum>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_15">
+               <item>
+                <spacer name="verticalSpacer_25">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_21">
+                 <property name="spacing">
+                  <number>25</number>
+                 </property>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_25">
+                   <item>
+                    <widget class="QLabel" name="label_22">
+                     <property name="styleSheet">
+                      <string notr="true">border: none;
+font-size: 16px;
+font-weight: bold;</string>
+                     </property>
+                     <property name="text">
+                      <string>Threshold</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_11">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="thresholdInputMatching">
+                     <property name="maximumSize">
+                      <size>
+                       <width>100</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_28">
+                   <item>
+                    <widget class="QLabel" name="label_23">
+                     <property name="styleSheet">
+                      <string notr="true">border: none;
+font-size: 16px;
+font-weight: bold;</string>
+                     </property>
+                     <property name="text">
+                      <string># of Matches</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_12">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="numOfMatchesInputMatching">
+                     <property name="maximumSize">
+                      <size>
+                       <width>100</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_18">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
                <item>
                 <widget class="QLabel" name="label_19">
                  <property name="styleSheet">
@@ -1018,43 +1135,43 @@ font-weight: bold;</string>
                 </spacer>
                </item>
                <item>
-                <widget class="QPushButton" name="ssdApply">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight: bold;
+                <layout class="QVBoxLayout" name="verticalLayout_20">
+                 <property name="spacing">
+                  <number>25</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>10</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>10</number>
+                 </property>
+                 <item>
+                  <widget class="QPushButton" name="correlationsApply">
+                   <property name="styleSheet">
+                    <string notr="true">font-weight: bold;
 font-size: 16px;
 border: 1px solid white;
 </string>
-                 </property>
-                 <property name="text">
-                  <string>Sum of Squared Differences</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="verticalSpacer_18">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="correlationsApply">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight: bold;
+                   </property>
+                   <property name="text">
+                    <string>Normalized Cross Correlations. </string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="ssdApply">
+                   <property name="styleSheet">
+                    <string notr="true">font-weight: bold;
 font-size: 16px;
 border: 1px solid white;
 </string>
-                 </property>
-                 <property name="text">
-                  <string>Normalized Cross Correlations. </string>
-                 </property>
-                </widget>
+                   </property>
+                   <property name="text">
+                    <string>Sum of Squared Differences</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
                <item>
                 <spacer name="verticalSpacer_17">

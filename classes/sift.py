@@ -380,7 +380,7 @@ class SIFT:
         print (f"matches found: {matches}")
         return matches
     
-    def match_and_visualize(self, image1, image2, keypoints1, descriptors1, keypoints2, descriptors2, method='ssd'):
+    def match_and_visualize(self, image1, image2, keypoints1, descriptors1, keypoints2, descriptors2, method='ssd', threshold=0.8, num_matches=150):
         """
         Match features between two images and visualize the results.
         Args:
@@ -396,9 +396,9 @@ class SIFT:
         """
         # Find matches using SSD
         if method == 'ncc':
-            matches = self.match_features_with_ncc(descriptors1, descriptors2)
+            matches = self.match_features_with_ncc(descriptors1, descriptors2, threshold=threshold)
         elif method == 'ssd':
-            matches = self.match_features_with_ssd(descriptors1, descriptors2)
+            matches = self.match_features_with_ssd(descriptors1, descriptors2, threshold=threshold)
 
         # Convert grayscale images to BGR for color visualization
         img1_color = cv2.cvtColor(image1, cv2.COLOR_GRAY2BGR)
@@ -414,7 +414,7 @@ class SIFT:
         matched_image[:height2, width1:] = img2_color
 
         # Draw each match with a unique color
-        for match in matches[:min(50, len(matches))]:  # Limit to top 50 matches
+        for match in matches[:min(num_matches, len(matches))]: 
             # Generate a random color
             color = tuple(np.random.randint(0, 256, 3).tolist())
 
