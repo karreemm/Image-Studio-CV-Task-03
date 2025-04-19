@@ -1714,6 +1714,12 @@ border-radius: 10px
                 <height>400</height>
                </size>
               </property>
+              <property name="maximumSize">
+               <size>
+                <width>850</width>
+                <height>400</height>
+               </size>
+              </property>
               <property name="styleSheet">
                <string notr="true">QFrame{
 background-color:#1E293B;

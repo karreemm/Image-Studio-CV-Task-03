@@ -1,7 +1,5 @@
 import numpy as np
 import cv2
-from PyQt5.QtWidgets import QApplication, QFileDialog
-import sys
 
 class SIFT:
     def __init__(self, sigma=1.6, s=3, num_octaves=4):
@@ -307,7 +305,7 @@ class SIFT:
         ncc = numerator / (norm1 * norm2)
         return ncc
 
-    def match_features(self, descriptors1, descriptors2, threshold=0.8):
+    def match_features_with_ncc(self, descriptors1, descriptors2, threshold=0.8):
         """
         Match SIFT descriptors between two images using NCC, minimizing distance.
         Args:
@@ -382,40 +380,7 @@ class SIFT:
         print (f"matches found: {matches}")
         return matches
     
-    
-    # def match_and_visualize(self, image1, image2, keypoints1, descriptors1, keypoints2, descriptors2, sift):
-    #     """
-    #     Match features between two images and visualize the results.
-    #     Args:
-    #         image1: First grayscale image (numpy array).
-    #         image2: Second grayscale image (numpy array).
-    #         keypoints1: List of cv2.KeyPoint objects for first image.
-    #         descriptors1: SIFT descriptors for first image (n1 x 128).
-    #         keypoints2: List of cv2.KeyPoint objects for second image.
-    #         descriptors2: SIFT descriptors for second image (n2 x 128).
-    #         sift: SIFT object with match_features method.
-    #     Returns:
-    #         matched_image: Image with drawn matches (BGR).
-    #     """
-    #     # Find matches using NCC
-    #     # matches = sift.match_features(descriptors1, descriptors2, threshold=0.8)
-    #     matches = sift.match_featues_with_ssd(descriptors1, descriptors2)
-    #     # Convert grayscale images to BGR for color visualization
-    #     img1_color = cv2.cvtColor(image1, cv2.COLOR_GRAY2BGR)
-    #     img2_color = cv2.cvtColor(image2, cv2.COLOR_GRAY2BGR)
-        
-    #     # Draw top N matches (e.g., top 50 or all if fewer)
-    #     matched_image = cv2.drawMatches(
-    #         img1_color, keypoints1, img2_color, keypoints2, matches[:min(50, len(matches))],
-    #         None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
-    #         matchColor=(0, 255, 0),  # Green lines for matches
-    #         singlePointColor=(0, 0, 255)  # Red for unmatched keypoints
-    #     )
-        
-    #     print(f"Number of matches found: {len(matches)}")
-    #     return matched_image
-
-    def match_and_visualize(self, image1, image2, keypoints1, descriptors1, keypoints2, descriptors2, sift):
+    def match_and_visualize(self, image1, image2, keypoints1, descriptors1, keypoints2, descriptors2, method='ssd'):
         """
         Match features between two images and visualize the results.
         Args:
@@ -430,7 +395,10 @@ class SIFT:
             matched_image: Image with drawn matches (BGR).
         """
         # Find matches using SSD
-        matches = sift.match_featues_with_ssd(descriptors1, descriptors2)
+        if method == 'ncc':
+            matches = self.match_features_with_ncc(descriptors1, descriptors2)
+        elif method == 'ssd':
+            matches = self.match_featues_with_ssd(descriptors1, descriptors2)
 
         # Convert grayscale images to BGR for color visualization
         img1_color = cv2.cvtColor(image1, cv2.COLOR_GRAY2BGR)
@@ -465,70 +433,4 @@ class SIFT:
         print(f"Number of matches found: {len(matches)}")
         return matched_image
 
-def select_image():
-    app = QApplication(sys.argv)
-    options = QFileDialog.Options()
-    file_path, _ = QFileDialog.getOpenFileName(
-        None, 
-        "Select Image", 
-        "", 
-        "Image Files (*.jpg *.jpeg *.png *.bmp *.gif)", 
-        options=options
-    )
-    if file_path:
-        img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
-        if img is None:
-            print(f"Failed to load image: {file_path}")
-            return None
-        return img
-    return None
 
-if __name__ == "__main__":
-    # Select two images
-    print("Select the first image:")
-    image1 = select_image()
-    print("Select the second image:")
-    image2 = select_image()
-    
-    if image1 is None or image2 is None:
-        print("One or both images failed to load or no images selected.")
-        sys.exit(1)
-    
-    # Initialize SIFT
-    sift = SIFT(sigma=1.6, s=3, num_octaves=4)
-    
-    # Process first image
-    sift.build_scale_space(image1)
-    extrema1 = sift.detect_extrema()
-    keypoints1 = sift.localize_keypoints(extrema1)
-    oriented_keypoints1 = sift.assign_orientations(keypoints1, image1)
-    final_keypoints1, descriptors1 = sift.compute_descriptors(oriented_keypoints1, image1)
-    
-    print(f"Image 1: Found {len(keypoints1)} initial keypoints")
-    print(f"Image 1: After orientation assignment: {len(oriented_keypoints1)} keypoints")
-    print(f"Image 1: After descriptor computation: {len(final_keypoints1)} keypoints with {descriptors1.shape} descriptors")
-    
-    # Process second image
-    sift.build_scale_space(image2)
-    extrema2 = sift.detect_extrema()
-    keypoints2 = sift.localize_keypoints(extrema2)
-    oriented_keypoints2 = sift.assign_orientations(keypoints2, image2)
-    final_keypoints2, descriptors2 = sift.compute_descriptors(oriented_keypoints2, image2)
-    
-    print(f"Image 2: Found {len(keypoints2)} initial keypoints")
-    print(f"Image 2: After orientation assignment: {len(oriented_keypoints2)} keypoints")
-    print(f"Image 2: After descriptor computation: {len(final_keypoints2)} keypoints with {descriptors2.shape} descriptors")
-    
-    # Perform feature matching and visualize
-    if len(final_keypoints1) > 0 and len(final_keypoints2) > 0:
-        matched_image = sift.match_and_visualize(
-            image1, image2, final_keypoints1, descriptors1, final_keypoints2, descriptors2, sift
-        )
-        
-        # Display and save the result
-        cv2.imshow("SIFT Feature Matches", matched_image)
-        cv2.imwrite("matched_output.jpg", matched_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-    else:
-        print("No keypoints found in one or both images. Cannot perform matching.")

@@ -94,16 +94,23 @@ class FeatureExtraction:
         self.corners = np.where(self.lambda_minus > self.threshold, 1, 0)
     
     def apply_non_maximum_suppression(self):
-        ''' Apply non-maximum suppression to the corners to get the local maxima in each window '''
+        '''Apply non-maximum suppression to the corners to get the local maxima in each window'''
         half_window = (self.window_size - 1) // 2
         padded_lambda_minus = self.pad_image(self.lambda_minus)
-        for i in range(0, self.corners.shape[0]):
-            for j in range(0, self.corners.shape[1]):
-                if self.corners[i, j] == 1:
-                    if self.lambda_minus[i + half_window, j + half_window] == np.max(padded_lambda_minus[i:(i + self.window_size), j:(j + self.window_size)]):
-                        self.corners[i, j] = 255
+        padded_corners = np.zeros_like(padded_lambda_minus)
+        
+        # Copy corners to padded array
+        padded_corners[half_window:-half_window, half_window:-half_window] = self.corners
+        
+        for i in range(half_window, self.corners.shape[0] + half_window):
+            for j in range(half_window, self.corners.shape[1] + half_window):
+                if padded_corners[i, j] == 1:
+                    window = padded_lambda_minus[i-half_window:i+half_window+1, 
+                                              j-half_window:j+half_window+1]
+                    if padded_lambda_minus[i, j] == np.max(window):
+                        self.corners[i-half_window, j-half_window] = 255
                     else:
-                        self.corners[i, j] = 0
+                        self.corners[i-half_window, j-half_window] = 0
         
     def pad_image(self, image):
         ''' Pad the image to avoid border exceptions '''
@@ -121,51 +128,4 @@ class FeatureExtraction:
         X, Y = np.meshgrid(x, y)
     
         gaussian_window = np.exp(-(X**2 + Y**2) / (2 * self.sigma**2)) / (2 * np.pi * self.sigma**2)
-        self.window_kernel = gaussian_window / np.sum(gaussian_window)    
-    
-    # def normalize_lambda_minus(self):
-    #     ''' Normalize the lambda minus matrix between 0 and 255 '''
-        
-    #     self.lambda_minus = (self.lambda_minus - np.min(self.lambda_minus)) / (np.max(self.lambda_minus) - np.min(self.lambda_minus)) * 255
-    #     self.corners = self.lambda_minus.astype(np.uint8)  # for 8-bit representation
-
-import cv2
-import numpy as np
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
-
-def main():
-    # Initialize the feature extraction class
-    feature_extractor = FeatureExtraction()
-
-    # Use a file dialog to select an image
-    Tk().withdraw()  # Hide the root Tkinter window
-    image_path = askopenfilename(title="Select an Image", filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp")])
-    
-    if not image_path:
-        print("No image selected. Exiting...")
-        return
-
-    # Load the image in grayscale
-    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    if image is None:
-        print("Failed to load the image. Exiting...")
-        return
-
-    # Extract features
-    threshold = 0.1  # You can adjust this threshold
-    window_size = 3  # You can adjust the window size
-    sigma = 0
-    features = feature_extractor.extraxt_lamda_minus(image, window_size=window_size, threshold=threshold, sigma=0.5)
-
-
-    # Display the original image and the lambda_minus matrix
-    cv2.imshow("Original Image", image)
-    cv2.imshow("Lambda Minus Matrix", features)
-
-    # Wait for a key press and close the windows
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    main()
+        self.window_kernel = gaussian_window / np.sum(gaussian_window)
