@@ -345,7 +345,7 @@ class SIFT:
         return matches
 
 
-    def match_featues_with_ssd(self, descriptors1, descriptors2, threshold = 0.8):
+    def match_features_with_ssd(self, descriptors1, descriptors2, threshold = 0.8):
         """
         Match SIFT descriptors between two images using SSD, minimizing distance.
         Args:
@@ -398,7 +398,7 @@ class SIFT:
         if method == 'ncc':
             matches = self.match_features_with_ncc(descriptors1, descriptors2)
         elif method == 'ssd':
-            matches = self.match_featues_with_ssd(descriptors1, descriptors2)
+            matches = self.match_features_with_ssd(descriptors1, descriptors2)
 
         # Convert grayscale images to BGR for color visualization
         img1_color = cv2.cvtColor(image1, cv2.COLOR_GRAY2BGR)
