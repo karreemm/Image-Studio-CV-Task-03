@@ -7,6 +7,7 @@ from helper_functions.compile_qrc import compile_qrc
 from classes.controller import Controller
 compile_qrc()
 from icons_setup.icons import *
+import time
 
 from icons_setup.compiledIcons import *
 class MainWindow(QMainWindow):
@@ -121,7 +122,15 @@ class MainWindow(QMainWindow):
         self.nccApply = self.findChild(QPushButton , "correlationsApply")
         self.nccApply.clicked.connect(self.apply_ncc_matching)
 
-    
+        # Extract Features Computational Time
+        self.extractFeaturesTimeLabel = self.findChild(QLabel , "extractFeaturesTimeLabel")
+        
+        # Sift Computation Time
+        self.siftTimeLabel = self.findChild(QLabel , "siftTime")
+
+        # Matching Computation Time
+        self.matchingTimeLabel = self.findChild(QLabel , "matchingTime")
+        
     def updateMode(self):
         current_mode = self.modesCombobox.currentText()
         if current_mode == 'Extract The Unique Features':
@@ -142,8 +151,11 @@ class MainWindow(QMainWindow):
         pass
 
     def apply_lambda_minus_extraxtion(self):
-        print("parameters: ", self.lambda_window_size, self.lambda_threshold, self.sigma)
+        lambda_minus_start_time = time.time()
         self.controller.apply_lambda_minus_extraction(self.lambda_window_size, self.lambda_threshold, self.sigma)
+        lambda_minus_end_time = time.time()
+        lambda_minus_total_time = lambda_minus_end_time - lambda_minus_start_time
+        self.extractFeaturesTimeLabel.setText(f'{lambda_minus_total_time:.3f} S')
 
     def update_lambda_minus_parameters(self):
         if self.windowSizeInputLambda.text() == "" or self.windowSizeInputLambda.text().isalpha():
@@ -157,7 +169,11 @@ class MainWindow(QMainWindow):
         self.sigma = float(self.sigmaInputLambda.text())
 
     def apply_sift(self):
+        self.sift_start_time = time.time()
         self.controller.apply_sift(self.sigmaSift, self.numOfOctavesSift)
+        self.sift_end_time = time.time()
+        self.sift_total_time = self.sift_end_time - self.sift_start_time
+        self.siftTimeLabel.setText(f"{self.sift_total_time:.3f} S")
 
     def update_sift_parameters(self):
         if self.numberOfOcatvesInputSift.text() == "" or self.numberOfOcatvesInputSift.text().isalpha():
@@ -168,11 +184,19 @@ class MainWindow(QMainWindow):
         self.sigmaSift = float(self.sigmaInputSift.text())
 
     def apply_ssd_matching(self):
+        self.ssdMatch_start_time = time.time()
         self.controller.match_images(method='ssd', threshold=self.matching_threshold, num_matches=self.numOfMatches)
+        self.ssdMatch_end_time = time.time()
+        self.ssdMatch_total_time = self.ssdMatch_end_time - self.ssdMatch_start_time
+        self.matchingTimeLabel.setText(f"{self.ssdMatch_total_time:.3f} S")
 
     def apply_ncc_matching(self):
+        self.nccMatch_start_time = time.time()
         self.controller.match_images(method='ncc')
-
+        self.nccMatch_end_time = time.time()
+        self.nccMatch_total_time = self.nccMatch_end_time - self.nccMatch_start_time
+        self.matchingTimeLabel.setText(f"{self.nccMatch_total_time:.3f} S")
+    
     def update_matching_parameters(self):
         if self.numOfMatchesInputMatching.text() == "" or self.numOfMatchesInputMatching.text().isalpha():
             self.numOfMatchesInputMatching.setText("150")
