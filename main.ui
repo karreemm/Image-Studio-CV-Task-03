@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1287</width>
+    <width>1329</width>
     <height>1331</height>
    </rect>
   </property>
@@ -339,7 +339,46 @@ font-weight: bold;</string>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLineEdit" name="lineEdit_2">
+                    <widget class="QLineEdit" name="thresholdInputLambda">
+                     <property name="maximumSize">
+                      <size>
+                       <width>100</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_24">
+                   <item>
+                    <widget class="QLabel" name="label_21">
+                     <property name="styleSheet">
+                      <string notr="true">border: none;
+font-size: 16px;
+font-weight: bold;</string>
+                     </property>
+                     <property name="text">
+                      <string>σ (Guassian Window)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_10">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="sigmaInputLambda">
                      <property name="maximumSize">
                       <size>
                        <width>100</width>
@@ -360,7 +399,7 @@ font-size: 16px;
 font-weight: bold;</string>
                      </property>
                      <property name="text">
-                      <string>Any</string>
+                      <string>Window Size</string>
                      </property>
                     </widget>
                    </item>
@@ -378,7 +417,7 @@ font-weight: bold;</string>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLineEdit" name="lineEdit_4">
+                    <widget class="QLineEdit" name="windowSizeInputLambda">
                      <property name="maximumSize">
                       <size>
                        <width>100</width>
@@ -448,6 +487,19 @@ padding: 5px;</string>
                </item>
               </layout>
              </widget>
+            </item>
+            <item row="1" column="0">
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
             </item>
             <item row="0" column="0">
              <widget class="QFrame" name="lambdaFrame">
@@ -534,7 +586,49 @@ font-weight: bold;</string>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLineEdit" name="lineEdit">
+                    <widget class="QLineEdit" name="thresholdInputHarris">
+                     <property name="maximumSize">
+                      <size>
+                       <width>100</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_23">
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_20">
+                     <property name="styleSheet">
+                      <string notr="true">border: none;
+font-size: 16px;
+font-weight: bold;</string>
+                     </property>
+                     <property name="text">
+                      <string>σ (Guassian Window)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_9">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="sigmaInputHarris">
                      <property name="maximumSize">
                       <size>
                        <width>100</width>
@@ -555,7 +649,7 @@ font-size: 16px;
 font-weight: bold;</string>
                      </property>
                      <property name="text">
-                      <string>Any</string>
+                      <string>Window Size</string>
                      </property>
                     </widget>
                    </item>
@@ -573,7 +667,7 @@ font-weight: bold;</string>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLineEdit" name="lineEdit_3">
+                    <widget class="QLineEdit" name="windowSizeInputHaarris">
                      <property name="maximumSize">
                       <size>
                        <width>100</width>
@@ -643,19 +737,6 @@ padding: 5px;</string>
                </item>
               </layout>
              </widget>
-            </item>
-            <item row="1" column="0">
-             <spacer name="verticalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </widget>
@@ -728,7 +809,7 @@ font-size: 16px;
 font-weight: bold;</string>
                      </property>
                      <property name="text">
-                      <string>Any</string>
+                      <string>Threshold</string>
                      </property>
                     </widget>
                    </item>
@@ -746,7 +827,7 @@ font-weight: bold;</string>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLineEdit" name="lineEdit_5">
+                    <widget class="QLineEdit" name="thresholdInputSift">
                      <property name="maximumSize">
                       <size>
                        <width>100</width>
@@ -767,7 +848,7 @@ font-size: 16px;
 font-weight: bold;</string>
                      </property>
                      <property name="text">
-                      <string>Any</string>
+                      <string>σ (Smoothing)</string>
                      </property>
                     </widget>
                    </item>
@@ -785,7 +866,7 @@ font-weight: bold;</string>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLineEdit" name="lineEdit_6">
+                    <widget class="QLineEdit" name="sigmaInputSift">
                      <property name="maximumSize">
                       <size>
                        <width>100</width>
@@ -806,7 +887,7 @@ font-size: 16px;
 font-weight: bold;</string>
                      </property>
                      <property name="text">
-                      <string>Any</string>
+                      <string>Number of Octaves</string>
                      </property>
                     </widget>
                    </item>
@@ -824,7 +905,7 @@ font-weight: bold;</string>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLineEdit" name="lineEdit_7">
+                    <widget class="QLineEdit" name="numberOfOcatvesInputSift">
                      <property name="maximumSize">
                       <size>
                        <width>100</width>

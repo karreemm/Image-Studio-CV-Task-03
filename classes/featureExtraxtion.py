@@ -81,27 +81,20 @@ class FeatureExtraction:
                             [Sxy, Syy]])
 
                 self.calculate_eigenvalues(H, y - half_window, x - half_window)
-
-        
     
     def calculate_eigenvalues(self, H_matrix, y, x):
         ''' Calculate the eigenvalues and eigenvectors of the Harris matrix '''
-        
         eigenvalues = np.linalg.eigvals(H_matrix)
         self.lambda_minus[y, x] = min(eigenvalues)
     
     def apply_thresholding(self):
-        ''' Apply thresholding to choose lambda minus '''
-        
-        # Normalization of lambda minus for threshold (0:1)comparison
-        
-        self.lambda_minus = (self.lambda_minus - np.min(self.lambda_minus)) / (np.max(self.lambda_minus) - np.min(self.lambda_minus)) 
-        
+        ''' Apply thresholding to choose lambda minus '''   
+        # Normalization of lambda minus for threshold (0:1)comparison 
+        self.lambda_minus = (self.lambda_minus - np.min(self.lambda_minus)) / (np.max(self.lambda_minus) - np.min(self.lambda_minus))  
         self.corners = np.where(self.lambda_minus > self.threshold, 1, 0)
     
     def apply_non_maximum_suppression(self):
         ''' Apply non-maximum suppression to the corners to get the local maxima in each window '''
-        
         half_window = (self.window_size - 1) // 2
         padded_lambda_minus = self.pad_image(self.lambda_minus)
         for i in range(0, self.corners.shape[0]):
@@ -114,7 +107,6 @@ class FeatureExtraction:
         
     def pad_image(self, image):
         ''' Pad the image to avoid border exceptions '''
-        
         height, width = image.shape
         half_window = (self.window_size - 1) // 2
         padded_image = np.zeros(((height + 2 * half_window), (width + 2 * half_window)), dtype=image.dtype)
@@ -123,7 +115,6 @@ class FeatureExtraction:
     
     def create_gaussian_window(self):
         ''' Create a Gaussian window '''
-        
         half_window = (self.window_size - 1) // 2
         x = np.linspace(-half_window, half_window, self.window_size)
         y = np.linspace(-half_window, half_window, self.window_size)
@@ -131,7 +122,6 @@ class FeatureExtraction:
     
         gaussian_window = np.exp(-(X**2 + Y**2) / (2 * self.sigma**2)) / (2 * np.pi * self.sigma**2)
         self.window_kernel = gaussian_window / np.sum(gaussian_window)    
-    
     
     # def normalize_lambda_minus(self):
     #     ''' Normalize the lambda minus matrix between 0 and 255 '''

@@ -1,5 +1,5 @@
 import cv2
-from PyQt5.QtGui import QPixmap , QImage
+from PyQt5.QtGui import QPixmap, QImage
 from classes.featureExtraxtion import FeatureExtraction
 from classes.sift import SIFT
 from copy import deepcopy
