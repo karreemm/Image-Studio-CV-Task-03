@@ -4,26 +4,41 @@ class FeatureExtraction:
     def __init__(self):
         ''' Harris and lambda minus parameters'''
         self.window_size = None
+        self.threshold = 0
         self.corners = None
         self.H_matrix = None
         self.lambda_minus = None
+        self.sigma = 1.0 
+        self.window_kernel = None
         
-    def extraxt_lamda_minus(self, image, window_size = 3):    
+    def extraxt_lamda_minus(self, image, window_size = 3, threshold = 20, sigma = 0):    
         ''' Extract lambda minus features '''
-        
         # Initalization
         self.lambda_minus = np.zeros((image.shape[0], image.shape[1]), dtype=np.float32)
         self.window_size = window_size
+        self.threshold = threshold
+        self.sigma = sigma
         
+        if self.sigma == 0:
+            self.window_kernel = np.ones((self.window_size, self.window_size), dtype=np.float32) 
+        else:
+            self.create_gaussian_window()
+            
         # First step --> Calculate gradient using sobel
         self.calculate_gradient(image)
         
         # Second step --> Get H matrix and calculate eigenvalues(lambda minus)
         self.calculate_H_matrix()
         
-        # Third step --> Normalization
-        self.normalize_lambda_minus()     
-           
+        # Third step --> Thresholding
+        self.apply_thresholding()
+        
+        # Fourth step --> Non-maximum suppression
+        self.apply_non_maximum_suppression()
+        
+        # convert to 8-bit representation for displaying
+        self.corners = self.corners.astype(np.uint8)
+        
         return self.corners
         
     
@@ -54,9 +69,13 @@ class FeatureExtraction:
                 Iyy_window = self.Iyy[x - half_window : x + half_window + 1, y - half_window : y + half_window + 1]
                 Ixy_window = self.Ixy[x - half_window : x + half_window + 1, y - half_window : y + half_window + 1]
 
-                Sxx = np.sum(Ixx_window)
-                Syy = np.sum(Iyy_window)
-                Sxy = np.sum(Ixy_window)
+                filtered_Ixx_window = Ixx_window * self.window_kernel
+                filtered_Iyy_window = Iyy_window * self.window_kernel
+                filtered_Ixy_window = Ixy_window * self.window_kernel
+                
+                Sxx = np.sum(filtered_Ixx_window) 
+                Syy = np.sum(filtered_Iyy_window) 
+                Sxy = np.sum(filtered_Ixy_window)
                 
                 H = np.array([[Sxx, Sxy],
                             [Sxy, Syy]])
@@ -74,22 +93,51 @@ class FeatureExtraction:
     def apply_thresholding(self):
         ''' Apply thresholding to choose lambda minus '''
         
+        # Normalization of lambda minus for threshold (0:1)comparison
         
-        self.corners = np.where(self.lambda_minus > self.threshold, 255, 0)
+        self.lambda_minus = (self.lambda_minus - np.min(self.lambda_minus)) / (np.max(self.lambda_minus) - np.min(self.lambda_minus)) 
+        
+        self.corners = np.where(self.lambda_minus > self.threshold, 1, 0)
+    
+    def apply_non_maximum_suppression(self):
+        ''' Apply non-maximum suppression to the corners to get the local maxima in each window '''
+        
+        half_window = (self.window_size - 1) // 2
+        padded_lambda_minus = self.pad_image(self.lambda_minus)
+        for i in range(0, self.corners.shape[0]):
+            for j in range(0, self.corners.shape[1]):
+                if self.corners[i, j] == 1:
+                    if self.lambda_minus[i + half_window, j + half_window] == np.max(padded_lambda_minus[i:(i + self.window_size), j:(j + self.window_size)]):
+                        self.corners[i, j] = 255
+                    else:
+                        self.corners[i, j] = 0
         
     def pad_image(self, image):
         ''' Pad the image to avoid border exceptions '''
         
         height, width = image.shape
-        padded_image = np.zeros((height + 2, width + 2), dtype=image.dtype)
+        half_window = (self.window_size - 1) // 2
+        padded_image = np.zeros(((height + 2 * half_window), (width + 2 * half_window)), dtype=image.dtype)
         padded_image[1:-1, 1:-1] = image
         return padded_image    
     
-    def normalize_lambda_minus(self):
-        ''' Normalize the lambda minus matrix between 0 and 255 '''
+    def create_gaussian_window(self):
+        ''' Create a Gaussian window '''
         
-        self.lambda_minus = (self.lambda_minus - np.min(self.lambda_minus)) / (np.max(self.lambda_minus) - np.min(self.lambda_minus)) * 255
-        self.corners = self.lambda_minus.astype(np.uint8)  # for 8 bit representation
+        half_window = (self.window_size - 1) // 2
+        x = np.linspace(-half_window, half_window, self.window_size)
+        y = np.linspace(-half_window, half_window, self.window_size)
+        X, Y = np.meshgrid(x, y)
+    
+        gaussian_window = np.exp(-(X**2 + Y**2) / (2 * self.sigma**2)) / (2 * np.pi * self.sigma**2)
+        self.window_kernel = gaussian_window / np.sum(gaussian_window)    
+    
+    
+    # def normalize_lambda_minus(self):
+    #     ''' Normalize the lambda minus matrix between 0 and 255 '''
+        
+    #     self.lambda_minus = (self.lambda_minus - np.min(self.lambda_minus)) / (np.max(self.lambda_minus) - np.min(self.lambda_minus)) * 255
+    #     self.corners = self.lambda_minus.astype(np.uint8)  # for 8-bit representation
 
 import cv2
 import numpy as np
@@ -115,9 +163,10 @@ def main():
         return
 
     # Extract features
-    threshold = 20  # You can adjust this threshold
+    threshold = 0.1  # You can adjust this threshold
     window_size = 3  # You can adjust the window size
-    features = feature_extractor.extraxt_lamda_minus(image, window_size=window_size)
+    sigma = 0
+    features = feature_extractor.extraxt_lamda_minus(image, window_size=window_size, threshold=threshold, sigma=0.5)
 
 
     # Display the original image and the lambda_minus matrix
