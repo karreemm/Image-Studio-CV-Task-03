@@ -192,7 +192,7 @@ class MainWindow(QMainWindow):
 
     def apply_ncc_matching(self):
         self.nccMatch_start_time = time.time()
-        self.controller.match_images(method='ncc')
+        self.controller.match_images(method='ncc', threshold=self.matching_threshold, num_matches=self.numOfMatches)
         self.nccMatch_end_time = time.time()
         self.nccMatch_total_time = self.nccMatch_end_time - self.nccMatch_start_time
         self.matchingTimeLabel.setText(f"{self.nccMatch_total_time:.3f} S")
