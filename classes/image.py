@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-from PyQt5.QtWidgets import QFileDialog , QMessageBox
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QMessageBox
 
 class Image():
     def __init__(self):
@@ -18,7 +19,7 @@ class Image():
             options = QFileDialog.Options()
             file_path, _ = QFileDialog.getOpenFileName(None, "Select Image", "", "Image Files (*.jpg *.jpeg *.png *.bmp *.gif *.tif)", options=options)
             if file_path:
-                self.input_image = cv2.imread(file_path, cv2.IMREAD_COLOR)
+                self.input_image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
                 self.output_image = self.input_image.copy() # a copy of the selected image is made so we can modify it without affecting the original image
                 self.update_image_type(self.input_image) # update the selected image type
         except Exception as e:
@@ -29,7 +30,12 @@ class Image():
         '''
         function that detects whether image is grey or color (rgb) and updates the image_type attribute
         '''
-        # splitting the image into its 3 color channels
+        # Check if image is grayscale by checking dimensions
+        if len(image.shape) == 2:
+            self.image_type = 'grey'
+            return
+
+        # If image has 3 dimensions, check if it's truly color or just grayscale in BGR format
         r,g,b = cv2.split(image)
 
         # getting differences between them
@@ -44,5 +50,4 @@ class Image():
             self.image_type = 'color'
         else:
             self.image_type = 'grey'
-    
-    
+
