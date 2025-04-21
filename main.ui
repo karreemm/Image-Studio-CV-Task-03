@@ -800,45 +800,6 @@ font-weight: bold;</string>
                   <number>10</number>
                  </property>
                  <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_15">
-                   <item>
-                    <widget class="QLabel" name="label_11">
-                     <property name="styleSheet">
-                      <string notr="true">border: none;
-font-size: 16px;
-font-weight: bold;</string>
-                     </property>
-                     <property name="text">
-                      <string>Threshold</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_6">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QLineEdit" name="thresholdInputSift">
-                     <property name="maximumSize">
-                      <size>
-                       <width>100</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                 <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_14">
                    <item>
                     <widget class="QLabel" name="label_12">
@@ -1732,13 +1693,13 @@ Font-weight: bold;</string>
                   <property name="minimumSize">
                    <size>
                     <width>400</width>
-                    <height>300</height>
+                    <height>250</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
                     <width>400</width>
-                    <height>300</height>
+                    <height>250</height>
                    </size>
                   </property>
                   <property name="styleSheet">
@@ -1796,13 +1757,13 @@ Font-weight: bold;</string>
                   <property name="minimumSize">
                    <size>
                     <width>400</width>
-                    <height>300</height>
+                    <height>250</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
                     <width>400</width>
-                    <height>300</height>
+                    <height>250</height>
                    </size>
                   </property>
                   <property name="styleSheet">
@@ -1841,13 +1802,13 @@ border-radius: 10px
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>400</height>
+                <height>250</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>850</width>
-                <height>400</height>
+                <height>250</height>
                </size>
               </property>
               <property name="styleSheet">
