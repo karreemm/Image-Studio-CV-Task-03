@@ -1435,7 +1435,7 @@ font-size: 20px;
 </string>
                  </property>
                  <property name="text">
-                  <string>3400 mS</string>
+                  <string>0 S</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1635,7 +1635,7 @@ font-size: 20px;
 </string>
                  </property>
                  <property name="text">
-                  <string>3400 mS</string>
+                  <string>0 S</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1930,7 +1930,7 @@ font-size: 20px;
 </string>
                  </property>
                  <property name="text">
-                  <string>3400 mS</string>
+                  <string>0 S</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
