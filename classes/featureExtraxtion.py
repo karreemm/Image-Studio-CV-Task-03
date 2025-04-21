@@ -13,7 +13,7 @@ class FeatureExtraction:
         self.window_kernel = None
         self.method = "Harris"
         
-    def extraxt_lamda_minus(self, image, method, window_size = 3, threshold = 0.1, sigma = 0):    
+    def extract_features(self, image, method, window_size = 3, threshold = 0.1, sigma = 0):    
         ''' Extract lambda minus features '''
         # Initalization
         self.lambda_minus = np.zeros((image.shape[0], image.shape[1]), dtype=np.float32)

@@ -43,7 +43,13 @@ class Controller():
             self.labels[5].setPixmap(qpixmap_input_image_2)
 
     def apply_lambda_minus_extraction(self, window_size, threshold, sigma):
-        features = self.feature_extraction.extraxt_lamda_minus(self.input_image.input_image, "Harris", window_size, threshold, sigma)
+        features = self.feature_extraction.extract_features(self.input_image.input_image, "lambda_minus", window_size, threshold, sigma)
+        self.output_image.input_image = features
+        qpixmap_ = self.numpy_to_qpixmap(features)
+        self.labels[1].setPixmap(qpixmap_)
+    
+    def apply_harris_extraction(self, window_size, threshold, sigma):
+        features = self.feature_extraction.extract_features(self.input_image.input_image, "Harris", window_size, threshold, sigma)
         self.output_image.input_image = features
         qpixmap_ = self.numpy_to_qpixmap(features)
         self.labels[1].setPixmap(qpixmap_)

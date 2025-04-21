@@ -131,6 +131,22 @@ class MainWindow(QMainWindow):
         # Matching Computation Time
         self.matchingTimeLabel = self.findChild(QLabel , "matchingTime")
         
+        # Harris Parameters
+        self.thresholdInputHarris = self.findChild(QLineEdit , "thresholdInputHarris")
+        self.thresholdInputHarris.setText("0.1")
+        self.harris_threshold = float(self.thresholdInputHarris.text())
+        self.thresholdInputHarris.textChanged.connect(self.update_harris_parameters)
+
+        self.sigmaInputHarris = self.findChild(QLineEdit , "sigmaInputHarris")
+        self.sigmaInputHarris.setText("0.5")
+        self.harris_sigma = float(self.sigmaInputHarris.text())
+        self.sigmaInputHarris.textChanged.connect(self.update_harris_parameters)
+
+        self.windowSizeInputHarris = self.findChild(QLineEdit , "windowSizeInputHaarris")
+        self.windowSizeInputHarris.setText("3")
+        self.harris_window_size = int(self.windowSizeInputHarris.text())
+        self.windowSizeInputHarris.textChanged.connect(self.update_harris_parameters)
+        
     def updateMode(self):
         current_mode = self.modesCombobox.currentText()
         if current_mode == 'Extract The Unique Features':
@@ -148,7 +164,11 @@ class MainWindow(QMainWindow):
 
         
     def apply_harris_extraxtion(self):
-        pass
+        harris_start_time = time.time()
+        self.controller.apply_harris_extraction(self.harris_window_size, self.harris_threshold, self.harris_sigma)
+        harris_end_time = time.time()
+        harris_total_time = harris_end_time - harris_start_time
+        self.extractFeaturesTimeLabel.setText(f'{harris_total_time:.3f} S')
 
     def apply_lambda_minus_extraxtion(self):
         lambda_minus_start_time = time.time()
@@ -167,6 +187,17 @@ class MainWindow(QMainWindow):
         self.lambda_window_size = int(self.windowSizeInputLambda.text())
         self.lambda_threshold = float(self.thresholdInputLambda.text())
         self.sigma = float(self.sigmaInputLambda.text())
+    
+    def update_harris_parameters(self):
+        if self.windowSizeInputHarris.text() == "" or self.windowSizeInputHarris.text().isalpha():
+            self.windowSizeInputHarris.setText("3")
+        if self.thresholdInputHarris.text() == "" or self.thresholdInputHarris.text().isalpha():
+            self.thresholdInputHarris.setText("0.1")
+        if self.sigmaInputHarris.text() == "" or self.sigmaInputHarris.text().isalpha():
+            self.sigmaInputHarris.setText("0.5")
+        self.harris_window_size = int(self.windowSizeInputHarris.text())
+        self.harris_threshold = float(self.thresholdInputHarris.text())
+        self.harris_sigma = float(self.sigmaInputHarris.text())
 
     def apply_sift(self):
         self.sift_start_time = time.time()
