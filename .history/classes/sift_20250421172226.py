@@ -14,7 +14,7 @@ class SIFT:
         self.sigma = sigma
         self.s = s # Number of intervals & differences of gaussian per octave
         self.k = 2 ** (1.0 / s) # Scale factor between levels
-        self.num_levels = s + 2 # Number of blur levels per octave (s + 2 for DoG)
+        self.num_levels = s + 3 # Number of blur levels per octave (s + 3 for DoG)
         self.num_octaves = num_octaves
         self.scale_space = None # To store the Gaussian scale space
 
@@ -77,7 +77,7 @@ class SIFT:
 
             octave_DoG = []
             
-            for level in range(self.num_levels - 1):
+            for level in range(self.num_levels):
                 dog = self.scale_space[octave_index][level + 1] - self.scale_space[octave_index][level]
                 octave_DoG.append(dog) # append dog between current level and the next level
 
