@@ -205,7 +205,7 @@ class SIFT:
             y_final = y_refined * scale_factor
             sigma_final = self.sigma * (self.k ** m_refined) * scale_factor
 
-            kp = cv2.KeyPoint(x_final, y_final, sigma_final * 2) # x_final: The x-coordinate of the keypoint in the original image. 
+            kp = cv2.KeyPoint(x_final, y_final, sigma_final) # x_final: The x-coordinate of the keypoint in the original image. 
             # sigma_final * 2: The size (diameter) of the keypoint in the original image.
             keypoints.append(kp)
         return keypoints
@@ -219,7 +219,7 @@ class SIFT:
             # x & y position of current key point in original image
             x, y = int(key_point.pt[0]), int(key_point.pt[1])
 
-            sigma = key_point.size / 2 #  key_point.size = diameter of the keypoint in the image. This value is proportional to the scale (or sigma) at which the keypoint was detected during the SIFT algorithm.
+            sigma = key_point.size  #  key_point.size = radius of the keypoint in the image. This value is proportional to the scale (or sigma) at which the keypoint was detected during the SIFT algorithm.
 
             radius = int(np.ceil(1.5 * sigma)) # multiplying by 1.5 ensures that the patch covers the region of interest around the keypoint.
 
@@ -283,7 +283,7 @@ class SIFT:
         
         for kp in keypoints:
             x, y = int(kp.pt[0]), int(kp.pt[1])
-            sigma = kp.size / 2
+            sigma = kp.size
             orientation = kp.angle
             
             radius = int(np.ceil(3 * sigma)) #  The size of the patch around the keypoint. It is set to 3 times the scale (sigma) to ensure the patch covers the region of interest.
