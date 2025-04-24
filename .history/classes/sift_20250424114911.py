@@ -514,8 +514,8 @@ class SIFT:
             cv2.line(matched_image, pt1, pt2, color, 2)
 
             # Draw circles at the keypoints
-            cv2.circle(matched_image, pt1, 5, color, -1)
-            cv2.circle(matched_image, pt2, 5, color, -1)
+            cv2.circle(matched_image, pt1, 1, color, -1)
+            cv2.circle(matched_image, pt2, 1, color, -1)
 
         print(f"Number of matches found: {len(matches)}")
         return matched_image

@@ -423,7 +423,7 @@ class SIFT:
             if (1.0 - best_distance) >= threshold:
                 match = cv2.DMatch()
                 match.queryIdx = i # Index of the descriptor in the first image
-                match.trainIdx = best_idx # Index of the best matching descriptor in the second image
+                match.trainIdx = best_idx
                 match.distance = best_distance
                 matches.append(match)
         

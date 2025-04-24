@@ -334,27 +334,21 @@ class SIFT:
                     hist = np.zeros(8)
 
                     # 8-bin histogram is created for the subregion. Each bin represents a 45° range of gradient directions (360° divided into 8 bins).
-
                     for sy in range(sub_weights.shape[0]):
                         for sx in range(sub_weights.shape[1]):
                             bin_idx = int(sub_directions[sy, sx] // 45)
                             hist[bin_idx] += sub_weights[sy, sx]
 
-                    descriptor.extend(hist) # histogram for the current subregion is added to the descriptor list. extend adds all elements of the hist array (the 8-bin histogram) to the descriptor list as individual elements. This is necessary because the descriptor is a single 128-dimensional vector, and each subregion contributes 8 values (bins) to this vector.
+                    descriptor.extend(hist)
 
-            # descriptor is converted to a NumPy array for easier mathematical operations.
             descriptor = np.array(descriptor)
-
-            # Compute the Norm of the Descriptor
             norm = np.linalg.norm(descriptor)
-
-            # If the norm is greater than 0 (i.e., the descriptor is not a zero vector), the descriptor is normalized to unit length. This ensures that the descriptor is invariant to changes in illumination
             if norm > 0:
                 descriptor = descriptor / norm
-                descriptor = np.clip(descriptor, 0, 0.2) # Any value in the descriptor greater than 0.2 is set to 0.2 to reduce the effect of noise or small variations.
-                norm = np.linalg.norm(descriptor) 
+                descriptor = np.clip(descriptor, 0, 0.2)
+                norm = np.linalg.norm(descriptor)
                 if norm > 0:
-                    descriptor = descriptor / norm # After clipping, the descriptor is normalized again to ensure it remains a unit vector.
+                    descriptor = descriptor / norm
                     filtered_keypoints.append(kp)
                     descriptors.append(descriptor)
 
@@ -406,8 +400,8 @@ class SIFT:
         
         # Iterate over each descriptor in the first image
         for i in range(len(descriptors1)):
-            best_distance = float('inf') # The smallest distance (1 - NCC score) found so far (initialized to infinity).
-            best_idx = -1 # The index of the best matching descriptor in the second image.
+            best_distance = float('inf')
+            best_idx = -1
             
             # Compare with each descriptor in the second image
             for j in range(len(descriptors2)):
@@ -422,8 +416,8 @@ class SIFT:
             # Store match if NCC exceeds the threshold (i.e., distance is low enough)
             if (1.0 - best_distance) >= threshold:
                 match = cv2.DMatch()
-                match.queryIdx = i # Index of the descriptor in the first image
-                match.trainIdx = best_idx # Index of the best matching descriptor in the second image
+                match.queryIdx = i
+                match.trainIdx = best_idx
                 match.distance = best_distance
                 matches.append(match)
         

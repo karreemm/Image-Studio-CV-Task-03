@@ -407,7 +407,7 @@ class SIFT:
         # Iterate over each descriptor in the first image
         for i in range(len(descriptors1)):
             best_distance = float('inf') # The smallest distance (1 - NCC score) found so far (initialized to infinity).
-            best_idx = -1 # The index of the best matching descriptor in the second image.
+            best_idx = -1
             
             # Compare with each descriptor in the second image
             for j in range(len(descriptors2)):
@@ -422,8 +422,8 @@ class SIFT:
             # Store match if NCC exceeds the threshold (i.e., distance is low enough)
             if (1.0 - best_distance) >= threshold:
                 match = cv2.DMatch()
-                match.queryIdx = i # Index of the descriptor in the first image
-                match.trainIdx = best_idx # Index of the best matching descriptor in the second image
+                match.queryIdx = i
+                match.trainIdx = best_idx
                 match.distance = best_distance
                 matches.append(match)
         

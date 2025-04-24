@@ -205,8 +205,7 @@ class SIFT:
             y_final = y_refined * scale_factor
             sigma_final = self.sigma * (self.k ** m_refined) * scale_factor
 
-            kp = cv2.KeyPoint(x_final, y_final, sigma_final * 2) # x_final: The x-coordinate of the keypoint in the original image. 
-            # sigma_final * 2: The size (diameter) of the keypoint in the original image.
+            kp = cv2.KeyPoint(x_final, y_final, sigma_final * 2)
             keypoints.append(kp)
         return keypoints
 
@@ -216,12 +215,12 @@ class SIFT:
 
         for key_point in keypoints:
 
-            # x & y position of current key point in original image
+            # x & y position of current key point
             x, y = int(key_point.pt[0]), int(key_point.pt[1])
 
-            sigma = key_point.size / 2 #  key_point.size = diameter of the keypoint in the image. This value is proportional to the scale (or sigma) at which the keypoint was detected during the SIFT algorithm.
+            sigma = key_point.size / 2
 
-            radius = int(np.ceil(1.5 * sigma)) # multiplying by 1.5 ensures that the patch covers the region of interest around the keypoint.
+            radius = int(np.ceil(1.5 * sigma)) # size of the patch is proportional to the keypoint's scale (sigma
 
             if (x - radius < 0 or x + radius >= image.shape[1] or 
                 y - radius < 0 or y + radius >= image.shape[0]):
@@ -229,9 +228,8 @@ class SIFT:
 
             patch = image[y-radius : y+radius+1, x-radius : x+radius+1] # from the original image
 
-            # Gradients in the x and y directions are computed using the Sobel
-            dx = cv2.Sobel(patch, cv2.CV_32F, 1, 0, ksize=3) # gradient in x direction
-            dy = cv2.Sobel(patch, cv2.CV_32F, 0, 1, ksize=3) # gradient in y direction
+            dx = cv2.Sobel(patch, cv2.CV_32F, 1, 0, ksize=3)
+            dy = cv2.Sobel(patch, cv2.CV_32F, 0, 1, ksize=3)
 
             magnitude = np.sqrt(dx**2 + dy**2)
 
@@ -239,122 +237,89 @@ class SIFT:
             direction = np.arctan2(dy, dx) * 180 / np.pi
 
             # discretizing the orientations into 36 steps / levels
-            direction = (direction + 360) % 360 # gradient directions are normalized to the range [0, 360) to avoid negative angles.
-
-            y_coords, x_coords = np.indices(patch.shape) # Coordinates of each pixel in the patch.
-                                                         # np.indices: returns an array representing the indices of the patch
-
-            center = radius # The patch is extracted as a square region centered at the keypoint. In this square, the center of the patch corresponds to the pixel at (radius, radius) in the patch's local coordinate system.
-
-            # This line computes a Gaussian weighting mask for the patch of pixels around the keypoint to ensure that pixels closer to the keypoint (center of the patch) have more influence on the orientation assignment than those farther away.
-            # gaussian: A 2D array where each pixel has a weight based on its distance from the center.
-            gaussian = np.exp(-((x_coords - center)**2 + (y_coords - center)**2) / (2 * sigma**2))
-
-            weights = magnitude * gaussian # A 2D array (weights) where each pixel's value represents its weighted gradient magnitude.
-
-            hist = np.zeros(36) # create an empty histogram with 36 bins. Each bin corresponds to a 10° range of gradient directions (360° divided into 36 bins).
-            
-            # Iterate over each pixel in the patch and add its weighted gradient magnitude to the appropriate bin in the histogram.
-            for i in range(patch.shape[0]):
-                for j in range(patch.shape[1]):
-                    bin_idx = int(direction[i, j] // 10) # Divide the direction by 10 to determine the corresponding binpixel orientation falls into
-                    hist[bin_idx] += weights[i, j] # Add the pixel's weighted gradient magnitude to the bin
-
-            hist_smoothed = np.convolve(hist, [1, 1, 1], mode='same') / 3 # Smoothing reduces noise and ensures that the dominant orientation is more robustly identified. The smoothing is done using a simple 3-bin moving average: Each bin is replaced by the average of itself and its two neighbors.
-
-            max_idx = np.argmax(hist_smoothed) # index of the bin with the highest value in the smoothed histogram.
-
-            if hist_smoothed[max_idx] == 0:
-                continue # If the peak value in the histogram is 0, it means there is no significant gradient information around the keypoint. In such cases, the keypoint is skipped.
-            
-            angle = float((max_idx * 10 + 5) % 360) # The max_idx corresponds to a bin in the histogram. To convert it to an angle: Multiply the bin index by 10 (since each bin represents 10°). Add 5 to center the angle within the bin (e.g., bin 0 represents 0°–10°, so the center is 5°). Use % 360 to ensure the angle is within the range [0°, 360°).
-
-            new_kp = cv2.KeyPoint(float(x), float(y), key_point.size, angle) # make new opencv keypoint object. The cv2.KeyPoint class in OpenCV expects the coordinates (pt) of the keypoint to be in floating-point format
-            oriented_keypoints.append(new_kp)
-
-        return oriented_keypoints
-
-    def compute_descriptors(self, keypoints, image):
-        '''
-        Generates 128-dimensional feature descriptors for each keypoint
-        '''
-        filtered_keypoints = [] # A list to store keypoints that successfully generate descriptors.
-        descriptors = [] # A list to store the 128-dimensional descriptors for each keypoint.
-        
-        for kp in keypoints:
-            x, y = int(kp.pt[0]), int(kp.pt[1])
-            sigma = kp.size / 2
-            orientation = kp.angle
-            
-            radius = int(np.ceil(3 * sigma)) #  The size of the patch around the keypoint. It is set to 3 times the scale (sigma) to ensure the patch covers the region of interest.
-
-            if (x - radius < 0 or x + radius >= image.shape[1] or 
-                y - radius < 0 or y + radius >= image.shape[0]):
-                continue # If the patch extends outside the image boundaries, skip this keypoint.
-
-            patch = image[y-radius:y+radius+1, x-radius:x+radius+1]
-
-            dx = cv2.Sobel(patch, cv2.CV_32F, 1, 0, ksize=3)
-            dy = cv2.Sobel(patch, cv2.CV_32F, 0, 1, ksize=3)
-
-            magnitude = np.sqrt(dx**2 + dy**2)
-
-            direction = np.arctan2(dy, dx) * 180 / np.pi
             direction = (direction + 360) % 360
 
             y_coords, x_coords = np.indices(patch.shape)
 
             center = radius
 
-            gaussian = np.exp(-((x_coords - center)**2 + (y_coords - center)**2) / (2 * (1.5 * sigma)**2))
+            gaussian = np.exp(-((x_coords - center)**2 + (y_coords - center)**2) / (2 * sigma**2))
 
             weights = magnitude * gaussian
 
-            direction = (direction - orientation + 360) % 360 # The gradient directions are rotated to align with the keypoint's orientation. This ensures that the descriptor is rotation-invariant.
+            hist = np.zeros(36) # hist: histogram of discretized BINS / directions
+            
+            for i in range(patch.shape[0]):
+                for j in range(patch.shape[1]):
+                    bin_idx = int(direction[i, j] // 10) # bin: discretized orientation / direction
+                    hist[bin_idx] += weights[i, j]
 
+            hist_smoothed = np.convolve(hist, [1, 1, 1], mode='same') / 3
+
+            max_idx = np.argmax(hist_smoothed)
+
+            if hist_smoothed[max_idx] == 0:
+                continue
+            
+            angle = float((max_idx * 10 + 5) % 360)
+            new_kp = cv2.KeyPoint(float(x), float(y), key_point.size, angle)
+            oriented_keypoints.append(new_kp)
+
+        return oriented_keypoints
+
+    def compute_descriptors(self, keypoints, image):
+        filtered_keypoints = []
+        descriptors = []
+        
+        for kp in keypoints:
+            x, y = int(kp.pt[0]), int(kp.pt[1])
+            sigma = kp.size / 2
+            orientation = kp.angle
+            radius = int(np.ceil(3 * sigma))
+            if (x - radius < 0 or x + radius >= image.shape[1] or 
+                y - radius < 0 or y + radius >= image.shape[0]):
+                continue
+
+            patch = image[y-radius:y+radius+1, x-radius:x+radius+1]
+            dx = cv2.Sobel(patch, cv2.CV_32F, 1, 0, ksize=3)
+            dy = cv2.Sobel(patch, cv2.CV_32F, 0, 1, ksize=3)
+            magnitude = np.sqrt(dx**2 + dy**2)
+            direction = np.arctan2(dy, dx) * 180 / np.pi
+            direction = (direction + 360) % 360
+
+            y_coords, x_coords = np.indices(patch.shape)
+            center = radius
+            gaussian = np.exp(-((x_coords - center)**2 + (y_coords - center)**2) / (2 * (1.5 * sigma)**2))
+            weights = magnitude * gaussian
+
+            direction = (direction - orientation + 360) % 360
             patch_size = patch.shape[0]
-
             subregion_size = patch_size // 4
-
             descriptor = []
 
             for i in range(4):
                 for j in range(4):
-
-                    # starting and ending indices For each subregion 
                     y_start = i * subregion_size
                     y_end = (i + 1) * subregion_size
-
                     x_start = j * subregion_size
                     x_end = (j + 1) * subregion_size
-
-                    sub_weights = weights[y_start:y_end, x_start:x_end] # weighted gradient magnitudes for the subregion.
-                    sub_directions = direction[y_start:y_end, x_start:x_end] # gradient directions for the subregion.
-
+                    sub_weights = weights[y_start:y_end, x_start:x_end]
+                    sub_directions = direction[y_start:y_end, x_start:x_end]
                     hist = np.zeros(8)
-
-                    # 8-bin histogram is created for the subregion. Each bin represents a 45° range of gradient directions (360° divided into 8 bins).
-
                     for sy in range(sub_weights.shape[0]):
                         for sx in range(sub_weights.shape[1]):
                             bin_idx = int(sub_directions[sy, sx] // 45)
                             hist[bin_idx] += sub_weights[sy, sx]
+                    descriptor.extend(hist)
 
-                    descriptor.extend(hist) # histogram for the current subregion is added to the descriptor list. extend adds all elements of the hist array (the 8-bin histogram) to the descriptor list as individual elements. This is necessary because the descriptor is a single 128-dimensional vector, and each subregion contributes 8 values (bins) to this vector.
-
-            # descriptor is converted to a NumPy array for easier mathematical operations.
             descriptor = np.array(descriptor)
-
-            # Compute the Norm of the Descriptor
             norm = np.linalg.norm(descriptor)
-
-            # If the norm is greater than 0 (i.e., the descriptor is not a zero vector), the descriptor is normalized to unit length. This ensures that the descriptor is invariant to changes in illumination
             if norm > 0:
                 descriptor = descriptor / norm
-                descriptor = np.clip(descriptor, 0, 0.2) # Any value in the descriptor greater than 0.2 is set to 0.2 to reduce the effect of noise or small variations.
-                norm = np.linalg.norm(descriptor) 
+                descriptor = np.clip(descriptor, 0, 0.2)
+                norm = np.linalg.norm(descriptor)
                 if norm > 0:
-                    descriptor = descriptor / norm # After clipping, the descriptor is normalized again to ensure it remains a unit vector.
+                    descriptor = descriptor / norm
                     filtered_keypoints.append(kp)
                     descriptors.append(descriptor)
 
@@ -406,8 +371,8 @@ class SIFT:
         
         # Iterate over each descriptor in the first image
         for i in range(len(descriptors1)):
-            best_distance = float('inf') # The smallest distance (1 - NCC score) found so far (initialized to infinity).
-            best_idx = -1 # The index of the best matching descriptor in the second image.
+            best_distance = float('inf')
+            best_idx = -1
             
             # Compare with each descriptor in the second image
             for j in range(len(descriptors2)):
@@ -422,8 +387,8 @@ class SIFT:
             # Store match if NCC exceeds the threshold (i.e., distance is low enough)
             if (1.0 - best_distance) >= threshold:
                 match = cv2.DMatch()
-                match.queryIdx = i # Index of the descriptor in the first image
-                match.trainIdx = best_idx # Index of the best matching descriptor in the second image
+                match.queryIdx = i
+                match.trainIdx = best_idx
                 match.distance = best_distance
                 matches.append(match)
         
