@@ -141,7 +141,7 @@ class SIFT:
             # x & y position of current key point
             x, y = int(key_point.pt[0]), int(key_point.pt[1])
 
-            sigma = key_point.size
+            sigma = key_point.size # / 2
 
             radius = int(np.ceil(1.5 * sigma))
 
@@ -196,7 +196,7 @@ class SIFT:
         
         for kp in keypoints:
             x, y = int(kp.pt[0]), int(kp.pt[1])
-            sigma = kp.size / 2
+            sigma = kp.size # / 2
             orientation = kp.angle
             radius = int(np.ceil(3 * sigma))
             if (x - radius < 0 or x + radius >= image.shape[1] or 
