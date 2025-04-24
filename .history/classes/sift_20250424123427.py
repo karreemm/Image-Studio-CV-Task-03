@@ -141,7 +141,7 @@ class SIFT:
             # x & y position of current key point
             x, y = int(key_point.pt[0]), int(key_point.pt[1])
 
-            sigma = key_point.size
+            sigma = key_point.size # / 2
 
             radius = int(np.ceil(1.5 * sigma))
 
