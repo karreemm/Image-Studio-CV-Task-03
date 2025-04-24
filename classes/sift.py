@@ -115,97 +115,20 @@ class SIFT:
                             
         return extrema
 
-    def localize_keypoints(self, extrema, contrast_threshold=0.03, edge_threshold=10):
+    def localize_keypoints(self, extrema):
         """
          Refine extrema into keypoints with sub-pixel accuracy and filter out unstable ones.
          
          Parameters:
          - extrema (list): List of (octave, level, x, y) from detect_extrema
-         - contrast_threshold (float): Minimum DoG magnitude (default: 0.03)
-         - edge_threshold (float): 
-                - is a parameter used to filter out unstable keypoints that lie on edges.
-                - It helps eliminate keypoints with high edge responses by analyzing the curvature of the Difference of Gaussians (DoG) using the Hessian matrix. 
-                - If the ratio of principal curvatures (trace²/det) exceeds the edge_threshold, 
-                - the keypoint is discarded as it is likely to be on an edge rather than a corner.
          
          Returns:
-         - keypoints (list): List of (x, y, sigma) in ORIGINAL IMAGE coordinates
+         - keypoints (list): List of (x, y, sigma) in image coordinates
          """
         keypoints = []
-        DoG_pyramid = [] # Precompute DoG for all octaves
-        for o in range(self.num_octaves):
-            octave_DoG = []
-            for m in range(self.num_levels - 1):
-                dog = self.scale_space[o][m + 1] - self.scale_space[o][m]
-                octave_DoG.append(dog)
-            DoG_pyramid.append(octave_DoG)
 
         for (octave, level, x, y) in extrema:
-
-            # Get 3x3x3 DoG neighborhood
-            dog_prev = DoG_pyramid[octave][level - 1]
-            dog_curr = DoG_pyramid[octave][level]
-            dog_next = DoG_pyramid[octave][level + 1]
-
-            # Check bounds (skip if too close to edge)
-            if x < 1 or y < 1 or x >= dog_curr.shape[1] - 1 or y >= dog_curr.shape[0] - 1:
-                continue
-
-            # Sub-pixel refinement
-            # First derivatives
-            Dx = (dog_curr[y, x+1] - dog_curr[y, x-1]) / 2.0
-            Dy = (dog_curr[y+1, x] - dog_curr[y-1, x]) / 2.0
-            Ds = (dog_next[y, x] - dog_prev[y, x]) / 2.0
-            gradient = np.array([Dx, Dy, Ds])
-
-            # Second derivatives
-            Dxx = dog_curr[y, x+1] - 2 * dog_curr[y, x] + dog_curr[y, x-1]
-            Dyy = dog_curr[y+1, x] - 2 * dog_curr[y, x] + dog_curr[y-1, x]
-            Dss = dog_next[y, x] - 2 * dog_curr[y, x] + dog_prev[y, x]
-
-            Dxy = (dog_curr[y+1, x+1] - dog_curr[y+1, x-1] - dog_curr[y-1, x+1] + dog_curr[y-1, x-1]) / 4.0
-            Dxs = (dog_next[y, x+1] - dog_next[y, x-1] - dog_prev[y, x+1] + dog_prev[y, x-1]) / 4.0
-            Dys = (dog_next[y+1, x] - dog_next[y-1, x] - dog_prev[y+1, x] + dog_prev[y-1, x]) / 4.0
-            hessian = np.array([
-                [Dxx, Dxy, Dxs],
-                [Dxy, Dyy, Dys],
-                [Dxs, Dys, Dss]
-            ])
-
-            # Solve for offset: x̂ = -H⁻¹ * ∇D
-            try:
-                offset = -np.linalg.inv(hessian).dot(gradient)
-            except np.linalg.LinAlgError:
-                continue # Skip if Hessian is singular
-
-            # Check if offset is too large (unstable)
-            if np.any(np.abs(offset) > 0.5):
-                continue # Could iterate here, but we'll skip for simplicity
-
-            # Refined position
-            x_refined = x + offset[0]
-            y_refined = y + offset[1]
-            m_refined = level + offset[2]
-
-            # Compute refined DoG value for contrast check
-            D_refined = dog_curr[y, x] + 0.5 * gradient.dot(offset)
-            if abs(D_refined) < contrast_threshold:
-                continue # Low contrast, discard
-
-            # Edge response elimination (2D Hessian at current level)
-            H_2d = np.array([[Dxx, Dxy], [Dxy, Dyy]])
-            trace = Dxx + Dyy
-            det = Dxx * Dyy - Dxy ** 2
-            if det <= 0 or trace ** 2 / det >= (edge_threshold + 1) ** 2 / edge_threshold:
-                continue # Edge-like, discard
-
-            # Convert to original image coordinates and sigma
-            scale_factor = 2 ** octave
-            x_final = x_refined * scale_factor
-            y_final = y_refined * scale_factor
-            sigma_final = self.sigma * (self.k ** m_refined) * scale_factor
-
-            kp = cv2.KeyPoint(x_final, y_final, sigma_final * 2)
+            kp = cv2.KeyPoint(x, y, self.sigma)
             keypoints.append(kp)
         return keypoints
 
